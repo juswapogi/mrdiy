@@ -61,19 +61,56 @@ class DbResult {
         $this->num_rows = count($this->data);
     }
 
-    private function handleInsert($sql) {
-        error_log("INSERT SQL: " . $sql);
-        preg_match('/INSERT INTO\s+(\w+)\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)/i', $sql, $matches);
-        if ($matches) {
+private function handleInsert($sql) {
+        $sql = trim($sql);
+        // Match: INSERT INTO table (col1, col2) VALUES (val1, val2)
+        if (preg_match('/INSERT INTO\s+(\w+)\s*\(([^)]+)\)\s+VALUES\s*\((.+)\)/is', $sql, $matches)) {
             $table = $matches[1];
             $columns = array_map('trim', explode(',', $matches[2]));
-            $values = array_map('trim', explode(',', $matches[3]));
+            $valuesStr = $matches[3];
+            
+            // Parse values properly - handle quoted strings with commas inside
+            $values = [];
+            $current = '';
+            $inQuote = false;
+            $quoteChar = '';
+            
+            for ($i = 0; $i < strlen($valuesStr); $i++) {
+                $char = $valuesStr[$i];
+                
+                if (($char === '"' || $char === "'") && !$inQuote) {
+                    $inQuote = true;
+                    $quoteChar = $char;
+                } elseif ($char === $quoteChar && $inQuote) {
+                    // Check if next char escapes the quote
+                    if ($i + 1 < strlen($valuesStr) && $valuesStr[$i + 1] === $quoteChar) {
+                        $current .= $quoteChar;
+                        $i++;
+                    } else {
+                        $inQuote = false;
+                    }
+                } elseif ($char === ',' && !$inQuote) {
+                    $values[] = trim($current);
+                    $current = '';
+                } else {
+                    $current .= $char;
+                }
+            }
+            if (trim($current) !== '') {
+                $values[] = trim($current);
+            }
+            
             $data = [];
             foreach ($columns as $i => $col) {
                 $val = isset($values[$i]) ? trim($values[$i], " '\"") : '';
                 $data[$col] = $val;
-                error_log("Column: $col = $val");
             }
+            
+            $result = supabaseRequest($table, 'POST', $data);
+            $this->insert_id = isset($result['id']) ? $result['id'] : 1;
+            $this->num_rows = 1;
+        }
+    }
             error_log("Data to insert: " . print_r($data, true));
             $result = supabaseRequest($table, 'POST', $data);
             error_log("Supabase result: " . print_r($result, true));
