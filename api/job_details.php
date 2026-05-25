@@ -1,14 +1,6 @@
 <?php
-/**
- * GET /api/job_details.php?id=5
- *
- * Response: { "success": true, "job": { ... } }
- *        or { "success": false, "message": "Job not found" }
- */
-
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET');
 
 require_once __DIR__ . '/../db.php';
 
@@ -20,42 +12,38 @@ if ($id <= 0) {
     exit;
 }
 
-$result = mysqli_query($conn,
-    "SELECT id, title, description, location, salary, status, created_at
-     FROM jobs
-     WHERE id = $id
-     LIMIT 1"
-);
+$result = supabaseRequest('jobs?id=eq.' . $id);
 
-if (mysqli_num_rows($result) === 0) {
+if (!$result || count($result) === 0) {
     http_response_code(404);
     echo json_encode(['success' => false, 'message' => 'Job not found']);
     exit;
 }
 
-$row = mysqli_fetch_assoc($result);
+$row = $result[0];
 
 echo json_encode([
     'success' => true,
     'job' => [
-        'id'          => (string)$row['id'],
-        'title'       => $row['title']       ?? '',
+        'id' => (string)$row['id'],
+        'title' => $row['title'] ?? '',
         'description' => $row['description'] ?? '',
-        'location'    => $row['location']    ?? '',
-        'salary'      => $row['salary']      ?? '',
-        'status'      => $row['status']      ?? 'Open',
-        'created_at'  => $row['created_at']  ?? '',
-        'posted_ago'  => postedAgo($row['created_at'] ?? ''),
-    ],
+        'location' => $row['location'] ?? '',
+        'salary' => $row['salary'] ?? '',
+        'status' => $row['status'] ?? 'Open',
+        'created_at' => $row['created_at'] ?? '',
+        'posted_ago' => postedAgo($row['created_at'] ?? '')
+    ]
 ]);
 
 function postedAgo(?string $datetime): string {
     if (!$datetime) return 'Recently';
     $diff = time() - strtotime($datetime);
-    if ($diff < 60)      return 'Just now';
-    if ($diff < 3600)    return (int)($diff / 60)    . 'm ago';
-    if ($diff < 86400)   return (int)($diff / 3600)  . 'h ago';
-    if ($diff < 604800)  return (int)($diff / 86400) . 'd ago';
-    if ($diff < 2592000) return (int)($diff / 604800). 'w ago';
+    if ($diff < 60) return 'Just now';
+    if ($diff < 3600) return (int)($diff / 60) . 'm ago';
+    if ($diff < 86400) return (int)($diff / 3600) . 'h ago';
+    if ($diff < 604800) return (int)($diff / 86400) . 'd ago';
+    if ($diff < 2592000) return (int)($diff / 604800) . 'w ago';
     return (int)($diff / 2592000) . 'mo ago';
 }
+?>
