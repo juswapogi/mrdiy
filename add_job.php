@@ -59,17 +59,17 @@ $locations = [
 ];
 
 if (isset($_POST['save'])) {
-    $title       = mysqli_real_escape_string($conn, trim($_POST['title']));
-    $description = mysqli_real_escape_string($conn, trim($_POST['description']));
-    $location    = mysqli_real_escape_string($conn, trim($_POST['location']));
-    $salary      = mysqli_real_escape_string($conn, trim($_POST['salary']));
+    $title       = db_real_escape_string($conn, trim($_POST['title']));
+    $description = db_real_escape_string($conn, trim($_POST['description']));
+    $location    = db_real_escape_string($conn, trim($_POST['location']));
+    $salary      = db_real_escape_string($conn, trim($_POST['salary']));
     $status      = in_array($_POST['status'], ['Open', 'Closed']) ? $_POST['status'] : 'Open';
 
     if (!$title)    $errors[] = 'Job title is required.';
     if (!$location) $errors[] = 'Location is required.';
 
     if (empty($errors)) {
-        mysqli_query($conn,
+        db_query($conn,
             "INSERT INTO jobs (title, description, location, salary, status)
              VALUES ('$title', '$description', '$location', '$salary', '$status')"
         );

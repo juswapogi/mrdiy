@@ -5,19 +5,19 @@ include 'db.php';
 $filter = isset($_GET['filter']) && in_array($_GET['filter'], ['Pending','Approved','Rejected'])
     ? $_GET['filter'] : '';
 
-$search = isset($_GET['search']) ? mysqli_real_escape_string($conn, trim($_GET['search'])) : '';
+$search = isset($_GET['search']) ? db_real_escape_string($conn, trim($_GET['search'])) : '';
 
 $where = "WHERE role='user'";
 if ($filter) $where .= " AND status='$filter'";
 if ($search) $where .= " AND (fullname LIKE '%$search%' OR email LIKE '%$search%')";
 
-$users = mysqli_query($conn, "SELECT * FROM users $where ORDER BY id DESC");
+$users = db_query($conn, "SELECT * FROM users $where ORDER BY id DESC");
 
 $counts = [
-    'all'      => mysqli_num_rows(mysqli_query($conn, "SELECT id FROM users WHERE role='user'")),
-    'Pending'  => mysqli_num_rows(mysqli_query($conn, "SELECT id FROM users WHERE role='user' AND status='Pending'")),
-    'Approved' => mysqli_num_rows(mysqli_query($conn, "SELECT id FROM users WHERE role='user' AND status='Approved'")),
-    'Rejected' => mysqli_num_rows(mysqli_query($conn, "SELECT id FROM users WHERE role='user' AND status='Rejected'")),
+    'all'      => db_num_rows(db_query($conn, "SELECT id FROM users WHERE role='user'")),
+    'Pending'  => db_num_rows(db_query($conn, "SELECT id FROM users WHERE role='user' AND status='Pending'")),
+    'Approved' => db_num_rows(db_query($conn, "SELECT id FROM users WHERE role='user' AND status='Approved'")),
+    'Rejected' => db_num_rows(db_query($conn, "SELECT id FROM users WHERE role='user' AND status='Rejected'")),
 ];
 ?>
 <!DOCTYPE html>
@@ -102,11 +102,11 @@ $counts = [
             <div class="card-title">
                 <?= $filter ?: 'All' ?> Applicants
             </div>
-            <div style="font-size:13px;color:var(--muted);"><?= mysqli_num_rows($users) ?> result(s)</div>
+            <div style="font-size:13px;color:var(--muted);"><?= db_num_rows($users) ?> result(s)</div>
         </div>
 
         <div class="card-body">
-            <?php if (mysqli_num_rows($users) === 0): ?>
+            <?php if (db_num_rows($users) === 0): ?>
                 <div class="empty-state">
                     <div class="empty-state-icon">👤</div>
                     <div class="empty-state-title">No applicants found</div>
@@ -126,7 +126,7 @@ $counts = [
                         </tr>
                     </thead>
                     <tbody>
-                    <?php $i = 1; while ($row = mysqli_fetch_assoc($users)): ?>
+                    <?php $i = 1; while ($row = db_fetch_assoc($users)): ?>
                         <tr>
                             <td style="color:var(--muted);font-size:13px;"><?= $i++ ?></td>
                             <td>

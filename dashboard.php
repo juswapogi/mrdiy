@@ -2,15 +2,15 @@
 require_once '_auth.php';
 include 'db.php';
 // Stats
-$totalJobs       = mysqli_num_rows(mysqli_query($conn, "SELECT id FROM jobs"));
-$openJobs        = mysqli_num_rows(mysqli_query($conn, "SELECT id FROM jobs WHERE status='Open'"));
-$totalApplicants = mysqli_num_rows(mysqli_query($conn, "SELECT id FROM users WHERE role='user'"));
-$pendingUsers    = mysqli_num_rows(mysqli_query($conn, "SELECT id FROM users WHERE role='user' AND status='Pending'"));
-$approved        = mysqli_num_rows(mysqli_query($conn, "SELECT id FROM users WHERE role='user' AND status='Approved'"));
-$rejected        = mysqli_num_rows(mysqli_query($conn, "SELECT id FROM users WHERE role='user' AND status='Rejected'"));
+$totalJobs       = db_num_rows(db_query($conn, "SELECT id FROM jobs"));
+$openJobs        = db_num_rows(db_query($conn, "SELECT id FROM jobs WHERE status='Open'"));
+$totalApplicants = db_num_rows(db_query($conn, "SELECT id FROM users WHERE role='user'"));
+$pendingUsers    = db_num_rows(db_query($conn, "SELECT id FROM users WHERE role='user' AND status='Pending'"));
+$approved        = db_num_rows(db_query($conn, "SELECT id FROM users WHERE role='user' AND status='Approved'"));
+$rejected        = db_num_rows(db_query($conn, "SELECT id FROM users WHERE role='user' AND status='Rejected'"));
 
 // Job listings
-$jobs = mysqli_query($conn, "SELECT * FROM jobs ORDER BY id DESC");
+$jobs = db_query($conn, "SELECT * FROM jobs ORDER BY id DESC");
 
 $adminName = $_SESSION['admin_name'] ?? 'Admin';
 ?>
@@ -123,7 +123,7 @@ $adminName = $_SESSION['admin_name'] ?? 'Admin';
         </div>
 
         <div class="card-body">
-            <?php if (mysqli_num_rows($jobs) === 0): ?>
+            <?php if (db_num_rows($jobs) === 0): ?>
                 <div class="empty-state">
                     <div class="empty-state-icon">📋</div>
                     <div class="empty-state-title">No jobs posted yet</div>
@@ -131,7 +131,7 @@ $adminName = $_SESSION['admin_name'] ?? 'Admin';
                     <a href="add_job.php" class="btn btn-primary">Post a Job</a>
                 </div>
             <?php else: ?>
-                <?php while ($row = mysqli_fetch_assoc($jobs)): ?>
+                <?php while ($row = db_fetch_assoc($jobs)): ?>
                 <div class="job-row">
                     <div class="job-info">
                         <div class="job-title"><?= htmlspecialchars($row['title']) ?></div>

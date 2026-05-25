@@ -18,17 +18,17 @@ if (isset($_SESSION['admin'])) {
 $error = '';
 
 if (isset($_POST['login'])) {
-    $email    = mysqli_real_escape_string($conn, trim($_POST['email']));
-    $password = mysqli_real_escape_string($conn, trim($_POST['password']));
+    $email    = db_real_escape_string($conn, trim($_POST['email']));
+    $password = db_real_escape_string($conn, trim($_POST['password']));
 
-    $query = mysqli_query($conn,
+    $query = db_query($conn,
         "SELECT * FROM users
          WHERE email='$email' AND password='$password' AND role='admin' AND status='Approved'
          LIMIT 1"
     );
 
-    if (mysqli_num_rows($query) > 0) {
-        $admin = mysqli_fetch_assoc($query);
+    if (db_num_rows($query) > 0) {
+        $admin = db_fetch_assoc($query);
 
         session_regenerate_id(true);
         $_SESSION['admin']      = $admin['email'];

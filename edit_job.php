@@ -5,9 +5,9 @@ include 'db.php';
 $id = (int)($_GET['id'] ?? 0);
 if (!$id) { header('Location: dashboard.php'); exit; }
 
-$query = mysqli_query($conn, "SELECT * FROM jobs WHERE id='$id' LIMIT 1");
-if (mysqli_num_rows($query) === 0) { header('Location: dashboard.php'); exit; }
-$row = mysqli_fetch_assoc($query);
+$query = db_query($conn, "SELECT * FROM jobs WHERE id='$id' LIMIT 1");
+if (db_num_rows($query) === 0) { header('Location: dashboard.php'); exit; }
+$row = db_fetch_assoc($query);
 
 $errors = [];
 
@@ -66,17 +66,17 @@ $locations = [
 ];
 
 if (isset($_POST['update'])) {
-    $title       = mysqli_real_escape_string($conn, trim($_POST['title']));
-    $description = mysqli_real_escape_string($conn, trim($_POST['description']));
-    $location    = mysqli_real_escape_string($conn, trim($_POST['location']));
-    $salary      = mysqli_real_escape_string($conn, trim($_POST['salary']));
+    $title       = db_real_escape_string($conn, trim($_POST['title']));
+    $description = db_real_escape_string($conn, trim($_POST['description']));
+    $location    = db_real_escape_string($conn, trim($_POST['location']));
+    $salary      = db_real_escape_string($conn, trim($_POST['salary']));
     $status      = in_array($_POST['status'], ['Open', 'Closed']) ? $_POST['status'] : 'Open';
 
     if (!$title)    $errors[] = 'Job title is required.';
     if (!$location) $errors[] = 'Location is required.';
 
     if (empty($errors)) {
-        mysqli_query($conn,
+        db_query($conn,
             "UPDATE jobs SET
              title='$title',
              description='$description',
