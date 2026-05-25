@@ -62,6 +62,7 @@ class DbResult {
     }
 
     private function handleInsert($sql) {
+        error_log("INSERT SQL: " . $sql);
         preg_match('/INSERT INTO\s+(\w+)\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)/i', $sql, $matches);
         if ($matches) {
             $table = $matches[1];
@@ -69,10 +70,13 @@ class DbResult {
             $values = array_map('trim', explode(',', $matches[3]));
             $data = [];
             foreach ($columns as $i => $col) {
-                $val = trim($values[$i], " '\"");
+                $val = isset($values[$i]) ? trim($values[$i], " '\"") : '';
                 $data[$col] = $val;
+                error_log("Column: $col = $val");
             }
+            error_log("Data to insert: " . print_r($data, true));
             $result = supabaseRequest($table, 'POST', $data);
+            error_log("Supabase result: " . print_r($result, true));
             $this->insert_id = isset($result['id']) ? $result['id'] : 1;
             $this->num_rows = 1;
         }
