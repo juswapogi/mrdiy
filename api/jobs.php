@@ -43,6 +43,7 @@ function formatJob(array $row): array {
         'description' => $row['description'] ?? '',
         'location' => $row['location'] ?? '',
         'salary' => $row['salary'] ?? '',
+        'salary_type' => $row['salary_type'] ?? 'monthly',
         'status' => $row['status'] ?? 'Open',
         'created_at' => $row['created_at'] ?? '',
         'posted_ago' => postedAgo($row['created_at'] ?? '')
