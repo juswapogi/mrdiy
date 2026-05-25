@@ -27,9 +27,7 @@ class DbResult {
     }
 
     private function executeQuery($sql) {
-        $sql = trim($sql);
         $type = strtoupper(substr($sql, 0, 6));
-
         if ($type === 'SELECT' || $type === 'SHOW') {
             $this->parseSelect($sql);
         } elseif ($type === 'INSERT') {
@@ -52,7 +50,6 @@ class DbResult {
             if (preg_match('/id\s*=\s*(\d+)/i', $where, $m)) { $params .= '&id=eq.' . $m[1]; }
             if (preg_match('/email\s*=\s*[\'"]?([^\']+)[\'"]?/i', $where, $m)) { $params .= '&email=eq.' . urlencode($m[1]); }
             if (preg_match('/role\s*=\s*[\'"]?(\w+)[\'"]?/i', $where, $m)) { $params .= '&role=eq.' . $m[1]; }
-            if (preg_match('/title\s+LIKE\s+[\'"]%(.+?)%[\'"]/i', $where, $m)) { $params .= '&title=ilike.' . urlencode($m[1]); }
         }
         if (preg_match('/LIMIT\s+(\d+)/i', $sql, $m)) { $params = 'select=*&order=id.desc&limit=' . (int)$m[1]; }
 
@@ -61,15 +58,12 @@ class DbResult {
         $this->num_rows = count($this->data);
     }
 
-private function handleInsert($sql) {
-        $sql = trim($sql);
-        // Match: INSERT INTO table (col1, col2) VALUES (val1, val2)
+    private function handleInsert($sql) {
         if (preg_match('/INSERT INTO\s+(\w+)\s*\(([^)]+)\)\s+VALUES\s*\((.+)\)/is', $sql, $matches)) {
             $table = $matches[1];
             $columns = array_map('trim', explode(',', $matches[2]));
             $valuesStr = $matches[3];
             
-            // Parse values properly - handle quoted strings with commas inside
             $values = [];
             $current = '';
             $inQuote = false;
@@ -77,12 +71,10 @@ private function handleInsert($sql) {
             
             for ($i = 0; $i < strlen($valuesStr); $i++) {
                 $char = $valuesStr[$i];
-                
                 if (($char === '"' || $char === "'") && !$inQuote) {
                     $inQuote = true;
                     $quoteChar = $char;
                 } elseif ($char === $quoteChar && $inQuote) {
-                    // Check if next char escapes the quote
                     if ($i + 1 < strlen($valuesStr) && $valuesStr[$i + 1] === $quoteChar) {
                         $current .= $quoteChar;
                         $i++;
@@ -111,17 +103,9 @@ private function handleInsert($sql) {
             $this->num_rows = 1;
         }
     }
-            error_log("Data to insert: " . print_r($data, true));
-            $result = supabaseRequest($table, 'POST', $data);
-            error_log("Supabase result: " . print_r($result, true));
-            $this->insert_id = isset($result['id']) ? $result['id'] : 1;
-            $this->num_rows = 1;
-        }
-    }
 
     private function handleUpdate($sql) {
-        preg_match('/UPDATE\s+(\w+)\s+SET\s+(.+?)\s+WHERE\s+(.+)/i', $sql, $matches);
-        if ($matches) {
+        if (preg_match('/UPDATE\s+(\w+)\s+SET\s+(.+?)\s+WHERE\s+(.+)/i', $sql, $matches)) {
             $table = $matches[1];
             $setPart = $matches[2];
             $wherePart = $matches[3];
@@ -135,19 +119,18 @@ private function handleInsert($sql) {
             foreach ($setMatches as $pair) { $data[$pair[1]] = trim($pair[2], " '\""); }
 
             if ($id) {
-                $result = supabaseRequest($table . '?id=eq.' . $id, 'PATCH', $data);
+                supabaseRequest($table . '?id=eq.' . $id, 'PATCH', $data);
                 $this->num_rows = 1;
             }
         }
     }
 
     private function handleDelete($sql) {
-        preg_match('/DELETE FROM\s+(\w+)\s+WHERE\s+(.+)/i', $sql, $matches);
-        if ($matches) {
+        if (preg_match('/DELETE FROM\s+(\w+)\s+WHERE\s+(.+)/i', $sql, $matches)) {
             $table = $matches[1];
             $where = $matches[2];
             if (preg_match('/id\s*=\s*[\'"]?(\d+)[\'"]?/i', $where, $m)) {
-                $result = supabaseRequest($table . '?id=eq.' . $m[1], 'DELETE');
+                supabaseRequest($table . '?id=eq.' . $m[1], 'DELETE');
                 $this->num_rows = 1;
             }
         }
